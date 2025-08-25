@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Generate Locker Form</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family:'Segoe UI',sans-serif; background:#f1f3f4; padding:30px; }
+  h1 { text-align:center; margin-bottom:20px; color:#1a73e8; }
+  .section { background:#fff; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1); padding:20px; margin-bottom:25px; }
+  table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; }
+  th, td { padding:12px 15px; border-bottom:1px solid #ddd; text-align:left; }
+  th { background:#1a73e8; color:white; font-weight:600; }
+  tr:hover { background:#f1faff; }
+  .btn { color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .btn-secondary{ background:#607d8b;} .btn-secondary:hover{background:#516a76;}
+  .btn-danger{background:#e53935;} .btn-danger:hover{background:#c62828;}
+  .btn-success{background:#4CAF50;} .btn-success:hover{background:#388E3C;}
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center; z-index:9999; }
+  .modal-inner { background:#fff; border-radius:12px; padding:20px; width:800px; max-width:92%; box-shadow:0 10px 30px rgba(0,0,0,0.2); overflow-y:auto; max-height:95vh; }
+  canvas { border:1px solid #ccc; border-radius:4px; margin-top:10px; background:#fff; width:100%; height:200px; }
+  .btn-group { margin-top:12px; display:flex; gap:10px; }
+</style>
+</head>
+<body>
+<h1>Generate Locker Form</h1>
+<div class="section">
+  <h2>Assigned (Pending Signature)</h2>
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th>No.</th>
+        <th>Name (EN)</th>
+        <th>Class</th>
+        <th>School No.</th>
+        <th>Locker No.</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- AGREEMENT MODAL -->
+<div class="modal" id="formModal">
+  <div class="modal-inner">
+    <h1>锺灵中学学生储物柜租用规则</h1>
+    <ol>
+      <li>本校储物柜提供学生在课余时间收放简便物件之用。</li>
+      <li>本校对因使用储物柜所造成的损失，不承担任何责任。</li>
+      <li>学生不可以收放任何贵重的物品于储物柜内。</li>
+      <li>学生不可以存放任何违禁物件 (包括手机)。</li>
+      <li>学生只能在上课前，休息时间和放学后使用储物柜，违规者将被记一个小过。</li>
+      <li>物件存放好后，切记随身携带储物柜的钥匙。</li>
+      <li>学生必须自备储物柜的锁头及钥匙，学校不承担任何责任。</li>
+      <li>学校可以随时展开行动，突击检查储物柜，学生不能拒绝接受检查。</li>
+      <li>归还课本或毕业前必须清理储物柜。</li>
+      <li>租用储物柜者必须签署租用合约及遵守使用规则。</li>
+      <li>租用储物柜者，必须在签约时一次过缴清租金。</li>
+      <li>储物柜若有损坏，学生须付修理损坏之费用。</li>
+      <li>租期未满者，半途欲终止租约者，租金一律不退还。</li>
+    </ol>
+
+    <h3>学生信息</h3>
+    <p>姓名(中): <span id="f_name_cn"></span></p>
+    <p>姓名(英): <span id="f_name_en"></span></p>
+    <p>学号: <span id="f_school_no"></span></p>
+    <p>班级: <span id="f_class"></span></p>
+    <p>储物柜号码: <span id="f_locker_number"></span></p>
+
+    <h3>签名</h3>
+    <canvas id="signature-pad"></canvas>
+    <div class="btn-group">
+      <button id="clear" class="btn btn-danger">清除</button>
+      <button id="save" class="btn btn-success">提交签名</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY_PENDING_SIGN = 'pendingSign';
+const KEY_LOCKER_LIST = 'lockerList';
+let currentStudent = null;
+
+const modal = document.getElementById('formModal');
+const canvas = document.getElementById('signature-pad');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+
+function resizeCanvas() {
+  const ratio = window.devicePixelRatio || 1;
+  const displayWidth = canvas.clientWidth;
+  const displayHeight = 200;
+
+  canvas.width = displayWidth * ratio;
+  canvas.height = displayHeight * ratio;
+
+  // Reset transform each time
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(ratio, ratio);
+
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#000';
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Draw with mouse
+canvas.addEventListener("mousedown", e => {
+  drawing = true;
+  ctx.beginPath();
+  ctx.moveTo(e.offsetX, e.offsetY);
+});
+canvas.addEventListener("mousemove", e => {
+  if (drawing) {
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+  }
+});
+window.addEventListener("mouseup", () => drawing = false);
+
+// Draw with touch
+canvas.addEventListener("touchstart", e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches[0];
+  ctx.beginPath();
+  ctx.moveTo(t.clientX - rect.left, t.clientY - rect.top);
+  drawing = true;
+});
+canvas.addEventListener("touchmove", e => {
+  e.preventDefault();
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches[0];
+  ctx.lineTo(t.clientX - rect.left, t.clientY - rect.top);
+  ctx.stroke();
+});
+canvas.addEventListener("touchend", () => drawing = false);
+
+document.getElementById("clear").onclick = () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  resizeCanvas();
+};
+
+document.getElementById("save").onclick = () => {
+  if (!currentStudent) return;
+  const pending = JSON.parse(localStorage.getItem(KEY_PENDING_SIGN)) || [];
+  const list = JSON.parse(localStorage.getItem(KEY_LOCKER_LIST)) || [];
+  const idx = pending.findIndex(s => (s.school_no||"").toUpperCase() === (currentStudent.school_no||"").toUpperCase());
+  if (idx > -1) {
+    pending[idx].signature = canvas.toDataURL();
+    pending[idx].signed_at = Date.now();
+    list.push(pending[idx]);
+    pending.splice(idx,1);
+    localStorage.setItem(KEY_PENDING_SIGN, JSON.stringify(pending));
+    localStorage.setItem(KEY_LOCKER_LIST, JSON.stringify(list));
+    alert("Signature saved & student moved to Locker List!");
+    modal.style.display = "none";
+    render();
+  }
+};
+
+function openForm(s){
+  currentStudent = s;
+  document.getElementById("f_name_cn").textContent = s.name_cn || "-";
+  document.getElementById("f_name_en").textContent = s.name_en || "-";
+  document.getElementById("f_school_no").textContent = (s.school_no||"").toUpperCase();
+  document.getElementById("f_class").textContent = s.class || "-";
+  document.getElementById("f_locker_number").textContent = s.locker_number || "-";
+  document.getElementById("clear").click(); 
+  modal.style.display = "flex";
+}
+
+function render(){
+  const pending = JSON.parse(localStorage.getItem(KEY_PENDING_SIGN)) || [];
+  const tbody = document.querySelector("#tbl tbody");
+  tbody.innerHTML = "";
+  pending.forEach((s,i)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${s.name_en||"-"}</td>
+      <td>${s.class||"-"}</td>
+      <td>${(s.school_no||"").toUpperCase()}</td>
+      <td>${s.locker_number||"-"}</td>
+      <td><button class="btn btn-secondary">Show Locker Form</button></td>
+    `;
+    const btn = tr.querySelector('button');
+    btn.addEventListener('click', ()=>openForm(s));
+    tbody.appendChild(tr);
+  });
+}
+
+window.addEventListener('click', (e)=>{ if (e.target === modal) modal.style.display = 'none'; });
+window.onload = render;
+</script>
+</body>
+</html>

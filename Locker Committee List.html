@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Locker Committee List</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4ff;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      text-align: center;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background: #dbeafe;
+      padding: 12px;
+      flex-wrap: wrap;
+      border-bottom: 2px solid #93c5fd;
+    }
+    .tabs button {
+      background: #bfdbfe;
+      border: none;
+      padding: 10px 18px;
+      margin: 5px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #1e3a8a;
+    }
+    .tabs button.active {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .tabs button:hover {
+      background: #3b82f6;
+      color: white;
+    }
+    .content {
+      display: none;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      margin-top: 25px;
+      border: 1px solid #e0e7ff;
+    }
+    .content.active {
+      display: block;
+    }
+    h2 {
+      margin-top: 0;
+      color: #1e3a8a;
+      border-bottom: 2px solid #bfdbfe;
+      padding-bottom: 6px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    li {
+      margin: 6px 0;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Locker Committee List</h1>
+</header>
+
+<div class="tabs">
+  <button class="tablink active" onclick="openTab('y2024')">2024</button>
+  <button class="tablink" onclick="openTab('y2024_25')">2024/2025</button>
+  <button class="tablink" onclick="openTab('y2025')">2025</button>
+  <button class="tablink" onclick="openTab('y2025_26')">2025/2026</button>
+</div>
+
+<div id="y2024" class="content active">
+  <h2>Locker Committee 2024</h2>
+  <ul>
+    <li>Chairman: Darren Lim Yu-Sheng</li>
+    <li>Deputy Chairman: Devyn Koay Chin Xian</li>
+    <li>Secretary: Cheng Jing Hang</li>
+    <li>Assistant Secretary: Tan Jun Zhe</li>
+    <li>Treasurer: Ang Rui Ze</li>
+    <li>Publicity In-Charge: Sim Jayeec & Jayden Yeoh Tze Khai</li>
+    <li>Discipline Master: Brian Koay Yi Yang</li>
+  </ul>
+</div>
+
+<div id="y2024_25" class="content">
+  <h2>Locker Committee 2024/2025</h2>
+  <ul>
+    <li>Chairman: Bryan Loh Ming Hao</li>
+    <li>Deputy Chairman: Devyn Koay Chin Xian</li>
+    <li>Secretary: Chong Zin Him</li>
+    <li>Assistant Secretary: Cheah Chao Jin</li>
+    <li>Treasurer: Brian Koay Yi Yang</li>
+    <li>Publicity In-Charge: Ang Rui Ze</li>
+    <li>Assistant Publicity In-Charge: Chew Tzi Jet</li>
+    <li>Discipline Master: Darren Lim Yu-Sheng</li>
+    <li>Assistant Discipline Master I: Sim Jayeec</li>
+    <li>Assistant Discipline Master II: Ang Meng Zhe</li>
+    <li>Cleanliness In-Charge: Cheng Jing Hang</li>
+    <li>Assistant Cleanliness In-Charge: Aidan Ong Yu Jie</li>
+  </ul>
+</div>
+
+<div id="y2025" class="content">
+  <h2>Locker Committee 2025</h2>
+  <ul>
+    <li>Chairman: Devyn Koay Chin Xian</li>
+    <li>Deputy Chairman: Chew Tzi Jet</li>
+    <li>Secretary: Cheah Chao Jin</li>
+    <li>Assistant Secretary: Ang Meng Zhe</li>
+    <li>Treasurer: Sim Jayeec</li>
+    <li>Assistant Treasurer: Aidan Ong Yu Jie</li>
+    <li>Publicity In-Charge: Peh Yi Feng</li>
+    <li>Assistant Publicity In-Charge: Tan Yu Zhe</li>
+    <li>Discipline Master: Wong Jun Xian</li>
+    <li>Assistant Discipline Master: Ling Zen You</li>
+    <li>Cleanliness In-Charge: Khoo Teng Ern</li>
+  </ul>
+</div>
+
+<div id="y2025_26" class="content">
+  <h2>Locker Committee 2025/2026</h2>
+  <ul>
+    <li>Chairman: Cheah Chao Jin</li>
+    <li>Deputy Chairman: Khoo Teng Ern</li>
+    <li>Secretary: Ang Meng Zhe</li>
+    <li>Assistant Secretary: Matthew Ooi Han Yu</li>
+    <li>Treasurer: Sim Jayeec</li>
+    <li>Publicity In-Charge: Aidan Ong Yu Jie</li>
+    <li>Assistant Publicity In-Charge: Wong Jun Xian</li>
+    <li>Discipline Master: Devyn Koay Chin Xian</li>
+    <li>Assistant Discipline Master I: Ling Zen You</li>
+    <li>Assistant Discipline Master II: Peh Yi Feng</li>
+    <li>Cleanliness In-Charge: Chew Tzi Jet</li>
+    <li>Assistant Cleanliness In-Charge: Tan Yu Zhe</li>
+  </ul>
+</div>
+
+<script>
+  function openTab(id) {
+    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tablink').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

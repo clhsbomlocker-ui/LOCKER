@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Broken Lockers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family:'Segoe UI',sans-serif; background:#f1f3f4; padding:30px; }
+  h1 { text-align:center; color:#1a73e8; }
+  .box { background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1); max-width:900px; margin:auto; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  input, textarea, button { padding:10px; border:1px solid #ccc; border-radius:6px; }
+  input[type="number"] { width:140px; }
+  textarea { flex:1; min-height:60px; resize:vertical; }
+  button { background:#1a73e8; color:#fff; cursor:pointer; }
+  button:hover { background:#1765c1; }
+  table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; }
+  th, td { padding:12px 15px; border-bottom:1px solid #ddd; text-align:left; }
+  th { background:#1a73e8; color:#fff; }
+  .danger { background:#e53935; }
+  .danger:hover { background:#c62828; }
+</style>
+</head>
+<body>
+<h1>Broken Lockers</h1>
+<div class="box">
+  <div class="row">
+    <input type="number" id="num" placeholder="Locker (1001-1576)" min="1001" max="1576">
+    <textarea id="remark" placeholder="Remarks (e.g., lock jammed, hinge broken)"></textarea>
+    <button id="add">Add / Update</button>
+  </div>
+
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th>Locker No.</th>
+        <th>Row</th>
+        <th>Remarks</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  const KEY_BROKEN = 'brokenLockers';
+  const LOCKER_MIN = 1001, LOCKER_MAX = 1576;
+
+  function rowOf(n){ return ((Number(n) - 1001) % 6 + 1); }
+
+  function isValidLocker(n){
+    n = Number(n);
+    return Number.isInteger(n) && n>=LOCKER_MIN && n<=LOCKER_MAX;
+  }
+
+  function load(){
+    const tbody = document.querySelector('#tbl tbody');
+    const list = JSON.parse(localStorage.getItem(KEY_BROKEN)) || [];
+    tbody.innerHTML = "";
+    list.sort((a,b)=>Number(a.number)-Number(b.number)).forEach((b,i)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${b.number}</td>
+        <td>${rowOf(b.number)}</td>
+        <td>${b.remark||"-"}</td>
+        <td>
+          <button class="danger" onclick="removeBroken(${b.number})">Remove</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function addOrUpdate(){
+    const n = Number(document.getElementById('num').value);
+    const remark = document.getElementById('remark').value.trim();
+    if (!isValidLocker(n)) { alert("Locker must be between 1001 and 1576."); return; }
+
+    const list = JSON.parse(localStorage.getItem(KEY_BROKEN)) || [];
+    const idx = list.findIndex(x=>Number(x.number)===n);
+    if (idx>-1) list[idx].remark = remark || list[idx].remark;
+    else list.push({number:n, remark});
+
+    localStorage.setItem(KEY_BROKEN, JSON.stringify(list));
+    document.getElementById('num').value="";
+    document.getElementById('remark').value="";
+    load();
+  }
+
+  function removeBroken(n){
+    const list = JSON.parse(localStorage.getItem(KEY_BROKEN)) || [];
+    const next = list.filter(x => Number(x.number)!==Number(n));
+    localStorage.setItem(KEY_BROKEN, JSON.stringify(next));
+    load();
+  }
+
+  document.getElementById('add').addEventListener('click', addOrUpdate);
+  load();
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Show Screen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f1f3f4; }
+    .box { max-width:500px; margin:80px auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.1); text-align:center; }
+    h1 { color:#1a73e8; }
+    input, button { width:100%; padding:14px; font-size:16px; margin:8px 0; border-radius:8px; border:1px solid #ccc; }
+    button { background:#1a73e8; color:#fff; cursor:pointer; }
+    button:hover { background:#0c56c0; }
+    .msg { margin-top:20px; font-size:18px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Student Locker Search</h1>
+    <form id="searchForm">
+      <input type="text" id="school_no" placeholder="Enter School Number" required>
+      <button type="submit">Search</button>
+    </form>
+    <div id="msg" class="msg"></div>
+  </div>
+
+  <script>
+    const KEY_REGISTERED = 'registeredStudents';
+    const KEY_WAITING    = 'waitingStudents';
+
+    function searchStudent(schoolNo){
+      const registered = JSON.parse(localStorage.getItem(KEY_REGISTERED)) || [];
+      const waiting    = JSON.parse(localStorage.getItem(KEY_WAITING)) || [];
+
+      const student = registered.find(s => (s.school_no||"").toUpperCase() === schoolNo);
+      if (!student) {
+        msg.textContent = "❌ Details not found for " + schoolNo;
+        return;
+      }
+
+      if (!waiting.some(w => (w.school_no||"").toUpperCase() === schoolNo)) {
+        waiting.push({...student, status:"waiting", joined_at: Date.now()});
+        localStorage.setItem(KEY_WAITING, JSON.stringify(waiting));
+      }
+
+      msg.textContent = "✅ " + student.name_en + " ("+student.class+") ";
+    }
+
+    const form = document.getElementById("searchForm");
+    const input = document.getElementById("school_no");
+    const msg = document.getElementById("msg");
+
+    form.addEventListener("submit", function(e){
+      e.preventDefault();
+      const no = input.value.trim().toUpperCase();
+      if(no) searchStudent(no);
+    });
+
+    input.addEventListener("keypress", function(e){
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const no = input.value.trim().toUpperCase();
+        if(no) searchStudent(no);
+      }
+    });
+  </script>
+</body>
+</html>

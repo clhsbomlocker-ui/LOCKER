@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Locker Management</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family:'Segoe UI',sans-serif; background:#f1f3f4; padding:30px; }
+  h1 { text-align:center; margin-bottom:20px; color:#1a73e8; }
+  .section { background:#fff; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1); padding:20px; margin-bottom:25px; }
+  .title-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .muted { color:#666; font-size:14px; }
+  table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; }
+  th, td { padding:12px 15px; border-bottom:1px solid #ddd; text-align:left; }
+  th { background:#1a73e8; color:white; font-weight:600; }
+  tr:hover { background:#f1faff; }
+  .btn { color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .btn-success { background:#4CAF50; } .btn-success:hover{ background:#388E3C; }
+  .btn-secondary{ background:#607d8b;} .btn-secondary:hover{background:#516a76;}
+  .assign-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  select, input[type="number"] { padding:8px; border:1px solid #ccc; border-radius:6px; }
+</style>
+</head>
+<body>
+<h1>Locker Management</h1>
+
+<!-- WAITING LIST -->
+<div class="section">
+  <div class="title-row">
+    <h2 style="margin:0">Waiting List</h2>
+    <div class="muted">Oldest at top. Assign by custom number or by row.</div>
+  </div>
+  <table id="waitingTable">
+    <thead>
+      <tr>
+        <th>No.</th>
+        <th>Name (EN)</th>
+        <th>Name (CN)</th>
+        <th>Class</th>
+        <th>School No.</th>
+        <th>Contact</th>
+        <th>Assign</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- PENDING SIGN -->
+<div class="section">
+  <div class="title-row">
+    <h2 style="margin:0">Assigned (Pending Signature)</h2>
+    <div class="muted">These students will appear in “Generate Locker Form”.</div>
+  </div>
+  <table id="pendingTable">
+    <thead>
+      <tr>
+        <th>No.</th>
+        <th>Name (EN)</th>
+        <th>Class</th>
+        <th>School No.</th>
+        <th>Locker No.</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  // Keys
+  const KEY_WAITING      = 'waitingStudents';
+  const KEY_PENDING_SIGN = 'pendingSign';         // [{...student, locker_number}]
+  const KEY_LOCKER_LIST  = 'lockerList';          // final signed
+  const KEY_BROKEN       = 'brokenLockers';       // [{number, remark}]
+  const LOCKER_MIN = 1001, LOCKER_MAX = 1576, ROWS = 6;
+
+  function getAllTakenNumbers(){
+    const pending = JSON.parse(localStorage.getItem(KEY_PENDING_SIGN)) || [];
+    const signed  = JSON.parse(localStorage.getItem(KEY_LOCKER_LIST)) || [];
+    const broken  = JSON.parse(localStorage.getItem(KEY_BROKEN)) || [];
+    const taken = new Set([
+      ...pending.map(s=>Number(s.locker_number)),
+      ...signed.map(s=>Number(s.locker_number)),
+      ...broken.map(b=>Number(b.number))
+    ]);
+    return taken;
+  }
+
+  function isValidLocker(n){
+    return Number.isInteger(n) && n>=LOCKER_MIN && n<=LOCKER_MAX;
+  }
+
+  function rowOf(n){
+    // 1001→1, 1002→2 ... 1006→6, 1007→1 ...
+    return ((n - 1001) % ROWS + 1);
+  }
+
+  function nextAvailableInRow(row){
+    const taken = getAllTakenNumbers();
+    // row sequence: start = 1000 + row, then add 6
+    for (let n = 1000 + row; n <= LOCKER_MAX; n += ROWS) {
+      if (!taken.has(n)) return n;
+    }
+    return null;
+  }
+
+  function assignCustom(studentIndex, lockerNo){
+    const waiting = JSON.parse(localStorage.getItem(KEY_WAITING)) || [];
+    const pending = JSON.parse(localStorage.getItem(KEY_PENDING_SIGN)) || [];
+    const n = Number(lockerNo);
+
+    if (!isValidLocker(n)) { alert("Locker must be between 1001 and 1576."); return; }
+
+    const taken = getAllTakenNumbers();
+    if (taken.has(n)) { alert("Locker "+n+" is unavailable (taken or broken)."); return; }
+
+    const s = waiting[studentIndex];
+    pending.push({...s, locker_number: n, assigned_at: Date.now()});
+    waiting.splice(studentIndex,1);
+
+    localStorage.setItem(KEY_PENDING_SIGN, JSON.stringify(pending));
+    localStorage.setItem(KEY_WAITING, JSON.stringify(waiting));
+    render();
+  }
+
+  function assignByRow(studentIndex, row){
+    row = Number(row);
+    if (!(row>=1 && row<=ROWS)) { alert("Invalid row."); return; }
+    const n = nextAvailableInRow(row);
+    if (!n) { alert("No available locker in Row "+row+"."); return; }
+    assignCustom(studentIndex, n);
+  }
+
+  function render(){
+    // waiting (oldest first by joined_at)
+    const waiting = (JSON.parse(localStorage.getItem(KEY_WAITING)) || [])
+      .sort((a,b)=>(a.joined_at||0)-(b.joined_at||0));
+    const pending = JSON.parse(localStorage.getItem(KEY_PENDING_SIGN)) || [];
+
+    const tb1 = document.querySelector("#waitingTable tbody");
+    tb1.innerHTML = "";
+    waiting.forEach((s,i)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${s.name_en||"-"}</td>
+        <td>${s.name_cn||"-"}</td>
+        <td>${s.class||"-"}</td>
+        <td>${(s.school_no||"").toUpperCase()}</td>
+        <td>${s.contact||"-"}</td>
+        <td>
+          <div class="assign-row">
+            <input type="number" min="${LOCKER_MIN}" max="${LOCKER_MAX}" placeholder="Custom (1001–1576)" id="custom_${i}">
+            <button class="btn btn-success" onclick="assignCustom(${i}, document.getElementById('custom_${i}').value)">Assign Custom</button>
+            <select id="row_${i}">
+              <option value="">Row…</option>
+              <option value="1">Row 1</option>
+              <option value="2">Row 2</option>
+              <option value="3">Row 3</option>
+              <option value="4">Row 4</option>
+              <option value="5">Row 5</option>
+              <option value="6">Row 6</option>
+            </select>
+            <button class="btn btn-secondary" onclick="const rv=document.getElementById('row_${i}').value; if(rv) assignByRow(${i}, rv); else alert('Choose a row')">Assign by Row</button>
+          </div>
+        </td>`;
+      tb1.appendChild(tr);
+    });
+
+    const tb2 = document.querySelector("#pendingTable tbody");
+    tb2.innerHTML = "";
+    pending.forEach((s,i)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${s.name_en||"-"}</td>
+        <td>${s.class||"-"}</td>
+        <td>${(s.school_no||"").toUpperCase()}</td>
+        <td>${s.locker_number||"-"} (Row ${rowOf(Number(s.locker_number))})</td>`;
+      tb2.appendChild(tr);
+    });
+  }
+
+  window.onload = render;
+</script>
+</body>
+</html>
+
+Can remove the assignes (Pending signature) replace with Locker Registration (Waiting for assign) help me make the sentences
+then give me full code
+also the locker registration(waiting for assign) this function is for after they register in the form then it will show there, when go to waiting list it will remove from the list, 
